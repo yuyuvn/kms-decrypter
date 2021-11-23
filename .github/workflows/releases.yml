@@ -11,8 +11,8 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Set github tag
-        id: github
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+      id: github
+      run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
     - uses: actions/setup-go@v2
       with:
         go-version: '^1.17.3'
@@ -20,6 +20,7 @@ jobs:
       env:
         RELEASE_VERSION: ${{ steps.github.outputs.tag }}
       run: |
+        sudo chmod +x bin/build.sh
         ./bin/build.sh
     - uses: ncipollo/release-action@v1
       with:
