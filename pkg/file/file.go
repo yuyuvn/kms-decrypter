@@ -10,7 +10,7 @@ import (
 	"github.com/yuyuvn/kms-decrypter/pkg/message"
 )
 
-// EachFile walk then send detected file to bus
+// List walk then send detected file to bus
 func List(ctx context.Context, root string, bus message.Bus) error {
 	handler := func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
@@ -35,6 +35,7 @@ func List(ctx context.Context, root string, bus message.Bus) error {
 	return filepath.WalkDir(root, handler)
 }
 
+// Read get file content
 func Read(ctx context.Context, path string) ([]byte, error) {
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -44,6 +45,7 @@ func Read(ctx context.Context, path string) ([]byte, error) {
 	return content, nil
 }
 
+// Write write file content and folder if needed
 func Write(ctx context.Context, path string, content []byte) error {
 	os.MkdirAll(filepath.Dir(path), os.ModePerm)
 

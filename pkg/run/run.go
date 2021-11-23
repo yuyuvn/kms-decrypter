@@ -11,6 +11,7 @@ import (
 	"golang.org/x/sync/errgroup"
 )
 
+// Run run main process
 func Run(cfg config.Config) {
 	// Create shared message bus
 	ch := make(message.Bus, 10000)

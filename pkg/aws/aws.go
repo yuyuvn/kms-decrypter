@@ -30,7 +30,7 @@ func decodeData(ctx context.Context, api KMSDecryptAPI, input *kms.DecryptInput)
 	return api.Decrypt(ctx, input)
 }
 
-// Decrypt decrypt text then return content
+// decrypt decrypt text then return content
 // Inputs:
 //     ctx is the context of the method call, which includes the AWS Region.
 //     data is the encoded string.
@@ -57,6 +57,13 @@ func decrypt(ctx context.Context, blob []byte) ([]byte, error) {
 	return result.Plaintext, nil
 }
 
+// Decrypt get input from bus then decrypt file content and write to output
+// Inputs:
+// 		ctx is the context of the method call
+//		bus is the channel from foler walker
+//		source is encrypted files folder
+//		target is output destination
+//		quiet if enabled, no output if no error
 func Decrypt(ctx context.Context, bus message.Bus, source string, target string, quiet bool) error {
 	for bus != nil {
 		select {
