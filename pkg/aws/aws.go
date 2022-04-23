@@ -12,10 +12,17 @@ import (
 	"github.com/yuyuvn/kms-decrypter/pkg/message"
 )
 
+type AwsDecrypter struct {
+}
+
 type KMSDecryptAPI interface {
 	Decrypt(ctx context.Context,
 		params *kms.DecryptInput,
 		optFns ...func(*kms.Options)) (*kms.DecryptOutput, error)
+}
+
+func (ad *AwsDecrypter) Init() {
+
 }
 
 // DecodeData decrypts some text that was encrypted with an AWS Key Management Service (AWS KMS) customer master key (CMK).
@@ -26,7 +33,7 @@ type KMSDecryptAPI interface {
 // Output:
 //     If success, a DecryptOutput object containing the result of the service call and nil.
 //     Otherwise, nil and an error from the call to Decrypt.
-func decodeData(ctx context.Context, api KMSDecryptAPI, input *kms.DecryptInput) (*kms.DecryptOutput, error) {
+func (ad *AwsDecrypter) decodeData(ctx context.Context, api KMSDecryptAPI, input *kms.DecryptInput) (*kms.DecryptOutput, error) {
 	return api.Decrypt(ctx, input)
 }
 
@@ -37,7 +44,7 @@ func decodeData(ctx context.Context, api KMSDecryptAPI, input *kms.DecryptInput)
 // Output:
 //     If success, a Decrypt object containing the decrypted string and nil.
 //     Otherwise, nil and an error from the call to Decrypt.
-func decrypt(ctx context.Context, blob []byte) ([]byte, error) {
+func (ad *AwsDecrypter) decrypt(ctx context.Context, blob []byte) ([]byte, error) {
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
 		panic("configuration error, " + err.Error())
@@ -49,7 +56,7 @@ func decrypt(ctx context.Context, blob []byte) ([]byte, error) {
 		CiphertextBlob: blob,
 	}
 
-	result, err := decodeData(ctx, client, input)
+	result, err := ad.decodeData(ctx, client, input)
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +71,7 @@ func decrypt(ctx context.Context, blob []byte) ([]byte, error) {
 //		source is encrypted files folder
 //		target is output destination
 //		quiet if enabled, no output if no error
-func Decrypt(ctx context.Context, bus message.Bus, source string, target string, quiet bool) error {
+func (ad *AwsDecrypter) Decrypt(ctx context.Context, bus message.Bus, source string, target string, quiet bool) error {
 	for bus != nil {
 		select {
 		// Exit early if context done.
@@ -80,12 +87,12 @@ func Decrypt(ctx context.Context, bus message.Bus, source string, target string,
 			filePath := payload.FilePath
 			blob, err := file.Read(ctx, path.Join(source, filePath))
 			if err != nil {
-				log.Fatalln("can't read file:", filePath, err)
+				log.Fatalln("can't read file:", path.Join(source, filePath), err)
 			}
 
-			content, err := decrypt(ctx, blob)
+			content, err := ad.decrypt(ctx, blob)
 			if err != nil {
-				log.Fatalln("can't decode file:", filePath, err)
+				log.Fatalln("can't decode file:", path.Join(source, filePath), err)
 			}
 
 			if err := file.Write(ctx, path.Join(target, filePath), content); err != nil {

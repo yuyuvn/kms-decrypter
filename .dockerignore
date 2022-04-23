@@ -1,3 +1,9 @@
 .git
 .out
 .github
+build
+bin
+README.md
+changelog.md
+.gitignore
+.editorconfig
