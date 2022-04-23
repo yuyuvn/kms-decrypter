@@ -9,7 +9,7 @@ on:
     - test
 
 concurrency:
-  group: ${{ github.ref }}
+  group: docker-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
