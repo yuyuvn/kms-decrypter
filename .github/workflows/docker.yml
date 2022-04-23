@@ -5,11 +5,17 @@ on:
     tags:
     - 'v*'
     branches:
+    - master
     - test
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     permissions:
       packages: write
       contents: read
