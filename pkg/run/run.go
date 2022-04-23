@@ -8,8 +8,13 @@ import (
 	"github.com/yuyuvn/kms-decrypter/pkg/config"
 	"github.com/yuyuvn/kms-decrypter/pkg/file"
 	"github.com/yuyuvn/kms-decrypter/pkg/message"
+	"github.com/yuyuvn/kms-decrypter/pkg/sops"
 	"golang.org/x/sync/errgroup"
 )
+
+type Decrypter interface {
+	Decrypt(ctx context.Context, bus message.Bus, source string, target string, quiet bool) error
+}
 
 // Run run main process
 func Run(cfg config.Config) {
@@ -23,9 +28,21 @@ func Run(cfg config.Config) {
 		return nil
 	})
 
+	var decrypter Decrypter
+	if cfg.Mode == "aws" {
+		decrypter = new(aws.AwsDecrypter)
+	} else {
+		decrypter = new(sops.SopsDecrypter)
+	}
+
 	for i := 0; i < cfg.Concurrency; i++ {
 		g.Go(func() error {
-			return aws.Decrypt(gctx, ch, cfg.Source, cfg.Target, cfg.Quiet)
+			if cfg.Mode == "aws" {
+				return decrypter.Decrypt(gctx, ch, cfg.Source, cfg.Target, cfg.Quiet)
+			} else {
+				return decrypter.Decrypt(gctx, ch, cfg.Source, cfg.Target, cfg.Quiet)
+			}
+
 		})
 	}
 

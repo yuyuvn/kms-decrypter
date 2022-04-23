@@ -16,6 +16,7 @@ type Config struct {
 	Target      string
 	Concurrency int
 	Quiet       bool
+	Mode        string
 }
 
 // exit will exit and print the usage.
@@ -28,12 +29,13 @@ func exit(e error) {
 
 // validate makes sure from and to are Redis URIs or file paths,
 // and generates the final Config.
-func validate(from string, to string, concurrency int, quiet bool) (Config, error) {
+func validate(from string, to string, concurrency int, quiet bool, mode string) (Config, error) {
 	cfg := Config{
 		Source:      from,
 		Target:      to,
 		Concurrency: concurrency,
 		Quiet:       quiet,
+		Mode:        mode,
 	}
 
 	switch {
@@ -41,6 +43,8 @@ func validate(from string, to string, concurrency int, quiet bool) (Config, erro
 		return cfg, fmt.Errorf("from is required")
 	case cfg.Target == "":
 		return cfg, fmt.Errorf("to is required")
+	case cfg.Mode != "aws" && cfg.Mode != "sops":
+		return cfg, fmt.Errorf("mode must be 'aws' or 'sops'")
 	case cfg.Concurrency < 1:
 		cfg.Concurrency = runtime.NumCPU()
 	}
@@ -54,10 +58,11 @@ func Parse() Config {
 	to := flag.String("t", "", "path where decrypted file will be writen to")
 	concurrency := flag.Int("n", 0, "number of worker, default is number of cpu cores")
 	quiet := flag.Bool("q", false, "quiet mode, default is false")
+	mode := flag.String("m", "aws", "aws or sops, default is 'aws'")
 
 	flag.Parse()
 
-	cfg, err := validate(*from, *to, *concurrency, *quiet)
+	cfg, err := validate(*from, *to, *concurrency, *quiet, *mode)
 	if err != nil {
 		// we exit here instead of returning so that we can show
 		// the usage examples in case of an error.
